@@ -1,0 +1,121 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "Ultimate Game Hub",
+   LoadingTitle = "soccer training Hub...",
+   LoadingSubtitle = "by xnxsmoke",
+   ConfigurationSaving = { Enabled = false },
+   Discord = { Enabled = false },
+   KeySystem = false
+})
+
+local Tab = Window:CreateTab("Funzioni", nil)
+
+-- ========================================================
+-- FUNZIONI INTERNE
+-- ========================================================
+local function ClaimReward()
+    local Players = game:GetService("Players")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local TargetPlayer = Players:FindFirstChild("xnxsmoke2") or Players.LocalPlayer
+    
+    local RemoteStorage = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Network"):WaitForChild("RemoteEventStorage")
+    local ClaimRewardEvent = RemoteStorage:WaitForChild("ClaimDailyReward")
+    
+    if TargetPlayer then
+        ClaimRewardEvent:FireServer(unpack({ TargetPlayer }))
+    end
+end
+
+local function ResetStreak()
+    local Players = game:GetService("Players")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local TargetPlayer = Players:FindFirstChild("xnxsmoke2") or Players.LocalPlayer
+    
+    local RemoteStorage = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Network"):WaitForChild("RemoteEventStorage")
+    local ResetStreakEvent = RemoteStorage:WaitForChild("ResetDailyStreak")
+    
+    if TargetPlayer then
+        ResetStreakEvent:FireServer(unpack({ TargetPlayer }))
+    end
+end
+
+local function GiveWin()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local RemoteStorage = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Network"):WaitForChild("RemoteEventStorage")
+    local ThrowRewardEvent = RemoteStorage:WaitForChild("ThrowReward")
+    
+    ThrowRewardEvent:FireServer(unpack({ 0 }))
+end
+
+local function TrainClick()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local RemoteStorage = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Network"):WaitForChild("RemoteEventStorage")
+    local JuggleClickEvent = RemoteStorage:WaitForChild("JuggleClick")
+    
+    JuggleClickEvent:FireServer()
+end
+
+-- ========================================================
+-- CREAZIONE TOGGLES NELL'INTERFACCIA
+-- ========================================================
+
+-- TOGGLE 1: Reward & Reset Spammer
+local RewardSpammerAttivo = false
+Tab:CreateToggle({
+   Name = "Spam Reward & Reset",
+   CurrentValue = false,
+   Flag = "ToggleReward",
+   Callback = function(Value)
+      RewardSpammerAttivo = Value
+      if RewardSpammerAttivo then
+         task.spawn(function()
+            while RewardSpammerAttivo do
+               pcall(ClaimReward)
+               task.wait(0.1)
+               if not RewardSpammerAttivo then break end
+               pcall(ResetStreak)
+               task.wait(0.1)
+            end
+         end)
+      end
+   end,
+})
+
+-- TOGGLE 2: Infinite Wins Spammer
+local WinsSpammerAttivo = false
+Tab:CreateToggle({
+   Name = "Inf Wins",
+   CurrentValue = false,
+   Flag = "ToggleWins",
+   Callback = function(Value)
+      WinsSpammerAttivo = Value
+      if WinsSpammerAttivo then
+         task.spawn(function()
+            while WinsSpammerAttivo do
+               pcall(GiveWin)
+               task.wait(0.1)
+            end
+         end)
+      end
+   end,
+})
+
+-- TOGGLE 3: Auto Train
+local AutoTrainAttivo = false
+Tab:CreateToggle({
+   Name = "Auto Train",
+   CurrentValue = false,
+   Flag = "ToggleTrain",
+   Callback = function(Value)
+      AutoTrainAttivo = Value
+      if AutoTrainAttivo then
+         task.spawn(function()
+            while AutoTrainAttivo do
+               pcall(TrainClick)
+               task.wait(0.05)
+            end
+         end)
+      end
+   end,
+})
