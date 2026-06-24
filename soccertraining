@@ -1,18 +1,24 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
-local Window = Rayfield:CreateWindow({
-   Name = "Ultimate Game Hub",
-   LoadingTitle = "soccer training Hub...",
-   LoadingSubtitle = "by xnxsmoke",
-   ConfigurationSaving = { Enabled = false },
-   Discord = { Enabled = false },
-   KeySystem = false
+-- Configurazione della Finestra Principale
+local Window = Fluent:CreateWindow({
+    Title = "Ultimate Game Hub",
+    SubTitle = "by xnxsmoke",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
 })
 
-local Tab = Window:CreateTab("Funzioni", nil)
+-- Creazione dei Tab verticali
+local Tabs = {
+    Funzioni = Window:AddTab({ Title = "Funzioni Spammer", Icon = "sparkles" }),
+    Uova = Window:AddTab({ Title = "Apertura Uova", Icon = "egg" })
+}
 
 -- ========================================================
--- FUNZIONI INTERNE
+-- FUNZIONI INTERNE ORIGINALI
 -- ========================================================
 local function ClaimReward()
     local Players = game:GetService("Players")
@@ -57,65 +63,119 @@ local function TrainClick()
 end
 
 -- ========================================================
--- CREAZIONE TOGGLES NELL'INTERFACCIA
+-- FUNZIONE DI APERTURA RAPIDA CON QUANTITÀ DINAMICA
+-- ========================================================
+local function HatchNightmare(quantita)
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local Comm = require(ReplicatedStorage.Packages.Comm)
+    local nomeUovo = "Nightmare Egg"
+    
+    if Comm and Comm.RemoteSignal then
+        local openSignal = Comm.RemoteSignal.ExclusiveOpen
+        if openSignal then
+            openSignal:FireServer(nomeUovo, quantita)
+            
+            if Comm.RemoteSignal.ExclusiveEggAnimationFinished then
+                task.wait(0.05)
+                Comm.RemoteSignal.ExclusiveEggAnimationFinished:FireServer()
+            end
+        end
+    end
+end
+
+-- ========================================================
+-- TAB 1: FUNZIONI ED AUTOMATION
 -- ========================================================
 
--- TOGGLE 1: Reward & Reset Spammer
+local RewardToggle = Tabs.Funzioni:AddToggle("ToggleReward", {Title = "Spam Reward & Reset", Default = false })
 local RewardSpammerAttivo = false
-Tab:CreateToggle({
-   Name = "Spam Reward & Reset",
-   CurrentValue = false,
-   Flag = "ToggleReward",
-   Callback = function(Value)
-      RewardSpammerAttivo = Value
-      if RewardSpammerAttivo then
-         task.spawn(function()
+
+RewardToggle:OnChanged(function()
+    RewardSpammerAttivo = RewardToggle.Value
+    if RewardSpammerAttivo then
+        task.spawn(function()
             while RewardSpammerAttivo do
-               pcall(ClaimReward)
-               task.wait(0.1)
-               if not RewardSpammerAttivo then break end
-               pcall(ResetStreak)
-               task.wait(0.1)
+                pcall(ClaimReward)
+                task.wait(0.1)
+                if not RewardSpammerAttivo then break end
+                pcall(ResetStreak)
+                task.wait(0.1)
             end
-         end)
-      end
-   end,
-})
+        end)
+    end
+end)
 
--- TOGGLE 2: Infinite Wins Spammer
+local WinsToggle = Tabs.Funzioni:AddToggle("ToggleWins", {Title = "Inf Wins", Default = false })
 local WinsSpammerAttivo = false
-Tab:CreateToggle({
-   Name = "Inf Wins",
-   CurrentValue = false,
-   Flag = "ToggleWins",
-   Callback = function(Value)
-      WinsSpammerAttivo = Value
-      if WinsSpammerAttivo then
-         task.spawn(function()
+
+WinsToggle:OnChanged(function()
+    WinsSpammerAttivo = WinsToggle.Value
+    if WinsSpammerAttivo then
+        task.spawn(function()
             while WinsSpammerAttivo do
-               pcall(GiveWin)
-               task.wait(0.1)
+                pcall(GiveWin)
+                task.wait(0.1)
             end
-         end)
-      end
-   end,
+        end)
+    end
+end)
+
+local TrainToggle = Tabs.Funzioni:AddToggle("ToggleTrain", {Title = "Auto Train", Default = false })
+local AutoTrainAttivo = false
+
+TrainToggle:OnChanged(function()
+    AutoTrainAttivo = TrainToggle.Value
+    if AutoTrainAttivo then
+        task.spawn(function()
+            while AutoTrainAttivo do
+                pcall(TrainClick)
+                task.wait(0.05)
+            end
+        end)
+    end
+end)
+
+-- ========================================================
+-- TAB 2: APERTURA UOVA (AGGIORNATO CON AUTO-OPEN LOOP)
+-- ========================================================
+
+Tabs.Uova:AddParagraph({
+    Title = "Gestione Inventario Exclusive",
+    Content = "Attiva i loop qui sotto per iniziare l'apertura continua automatica."
 })
 
--- TOGGLE 3: Auto Train
-local AutoTrainAttivo = false
-Tab:CreateToggle({
-   Name = "Auto Train",
-   CurrentValue = false,
-   Flag = "ToggleTrain",
-   Callback = function(Value)
-      AutoTrainAttivo = Value
-      if AutoTrainAttivo then
-         task.spawn(function()
-            while AutoTrainAttivo do
-               pcall(TrainClick)
-               task.wait(0.05)
+-- TOGGLE 1: Auto Open 1x Loop
+local Auto1xToggle = Tabs.Uova:AddToggle("AutoOpen1x", {Title = "Auto Hatch 1x", Default = false})
+local Auto1xAttivo = false
+
+Auto1xToggle:OnChanged(function()
+    Auto1xAttivo = Auto1xToggle.Value
+    if Auto1xAttivo then
+        task.spawn(function()
+            while Auto1xAttivo do
+                pcall(function() HatchNightmare(1) end)
+                -- Delay di sicurezza tra le aperture (puoi abbassarlo se il server regge)
+                task.wait(0.3) 
             end
-         end)
-      end
-   end,
-})
+        end)
+    end
+end)
+
+-- TOGGLE 2: Auto Open 5x Loop
+local Auto5xToggle = Tabs.Uova:AddToggle("AutoOpen5x", {Title = "Auto Hatch 5x ⚡", Default = false})
+local Auto5xAttivo = false
+
+Auto5xToggle:OnChanged(function()
+    Auto5xAttivo = Auto5xToggle.Value
+    if Auto5xAttivo then
+        task.spawn(function()
+            while Auto5xAttivo do
+                pcall(function() HatchNightmare(5) end)
+                -- Delay per l'apertura multipla di 5 uova alla volta
+                task.wait(0.5) 
+            end
+        end)
+    end
+end)
+
+Window:SelectTab(1)
